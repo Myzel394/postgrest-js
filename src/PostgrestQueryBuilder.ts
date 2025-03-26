@@ -66,7 +66,8 @@ export default class PostgrestQueryBuilder<
       head?: boolean
       count?: 'exact' | 'planned' | 'estimated'
     } = {}
-  ): PostgrestFilterBuilder<Schema, Relation['Row'], ResultOne[], RelationName, Relationships> {
+  ): PostgrestFilterBuilder<Schema, Relation['Row'], ResultOne[], RelationName, Relationships> &
+    PostgrestBuilder<ResultOne[], false> {
     const method = head ? 'HEAD' : 'GET'
     // Remove whitespaces except when quoted
     let quoted = false
@@ -87,14 +88,19 @@ export default class PostgrestQueryBuilder<
       this.headers['Prefer'] = `count=${count}`
     }
 
-    return new PostgrestFilterBuilder({
+    const input = {
       method,
       url: this.url,
       headers: this.headers,
       schema: this.schema,
       fetch: this.fetch,
       allowEmpty: false,
-    } as unknown as PostgrestBuilder<ResultOne[]>)
+    } as unknown as PostgrestBuilder<ResultOne[], false>
+
+    const builder = new PostgrestFilterBuilder(input)
+
+    // @ts-ignore
+    return builder
   }
 
   // TODO(v3): Make `defaultToNull` consistent for both single & bulk inserts.
